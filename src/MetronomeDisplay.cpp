@@ -63,7 +63,8 @@ void MetronomeDisplay::drawInputStatus(ControlMode mode) {
   }
 }
 
-void MetronomeDisplay::drawScreen(const MetronomeState& state) {
+void MetronomeDisplay::drawScreen(const MetronomeState& state,
+                                  uint8_t currentBeat) {
   M5.Display.fillScreen(TFT_BLACK);
   M5.Display.setTextColor(TFT_GREEN, TFT_BLACK);
   M5.Display.setTextSize(2);
@@ -72,6 +73,6 @@ void MetronomeDisplay::drawScreen(const MetronomeState& state) {
 
   drawControl(state);
   for (uint8_t beat = 0; beat < MetronomeState::BEATS_PER_BAR; beat++) {
-    drawBeat(beat, beat == state.currentBeat());
+    drawBeat(beat, beat == currentBeat);
   }
 }

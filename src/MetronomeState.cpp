@@ -15,10 +15,6 @@ uint8_t MetronomeState::clickVolume() const {
   return clickVolume_;
 }
 
-uint8_t MetronomeState::currentBeat() const {
-  return currentBeat_;
-}
-
 ControlMode MetronomeState::controlMode() const {
   return controlMode_;
 }
@@ -82,8 +78,4 @@ void MetronomeState::selectNextSound(bool accent) {
   const size_t nextIndex =
       (static_cast<size_t>(selection) + 1) % clickSoundCount();
   selection = static_cast<ClickSoundId>(nextIndex);
-}
-
-void MetronomeState::advanceBeat(uint32_t elapsedBeats) {
-  currentBeat_ = (currentBeat_ + elapsedBeats) % BEATS_PER_BAR;
 }

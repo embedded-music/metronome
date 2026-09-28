@@ -2,21 +2,71 @@
 #include <esp_timer.h>
 #include <M5Unified.h>
 
-#include "DeadlineClock.h"
 #include "ControlSurface.h"
 #include "MetronomeAudio.h"
 #include "MetronomeClickSamples.h"
 #include "MetronomeDisplay.h"
 #include "MetronomeState.h"
+#include "TriggerPatternLoader.h"
+#include "TriggerPatternPlayer.h"
 
 namespace {
 constexpr uint32_t SERIAL_BAUD = 115200;
 
 MetronomeState state;
-DeadlineClock beatClock;
 ControlSurface controls;
 MetronomeAudio audio;
 MetronomeDisplay display;
+
+class MetronomePatternSource : public TriggerPatternSource {
+ public:
+  bool load() {
+    static constexpr TriggerPatternCell cells[] = {
+        {0, 0, StepLevel::Strong},
+        {0, 1, StepLevel::Normal},
+        {0, 2, StepLevel::Normal},
+        {0, 3, StepLevel::Normal},
+    };
+    return TriggerPatternLoader::load(pattern_, MetronomeState::BEATS_PER_BAR,
+                                      cells);
+  }
+
+  const TriggerPattern& currentPattern() const override { return pattern_; }
+
+ private:
+  TriggerPattern pattern_;
+};
+
+class MetronomeClickSink : public TriggerEventSink {
+ public:
+  void trigger(const TriggerEvent& event) override {
+    const bool accent = event.level == StepLevel::Strong;
+    const ClickSoundId sound =
+        accent ? state.accentClick() : state.regularClick();
+    const PcmS8Sample& sample = clickSoundSample(sound);
+    const bool started = audio.play(sample);
+    const uint32_t durationMs =
+        sample.sampleCount * 1000UL / sample.sampleRateHz;
+    Serial.printf(
+        "click: accent=%s sound=%s duration_ms=%lu "
+        "sample_rate_hz=%lu samples=%u volume=%u gain=master "
+        "playback=started ok=%s now_ms=%lu\n",
+        accent ? "yes" : "no", clickSoundLogName(sound),
+        static_cast<unsigned long>(durationMs),
+        static_cast<unsigned long>(sample.sampleRateHz),
+        static_cast<unsigned>(sample.sampleCount), state.clickVolume(),
+        started ? "yes" : "no", static_cast<unsigned long>(millis()));
+  }
+
+};
+
+MetronomePatternSource patternSource;
+MetronomeClickSink clickSink;
+TriggerPatternPlayer player(patternSource, clickSink);
+
+StepIntervals currentStepIntervals() {
+  return StepIntervals::constant(state.beatIntervalMs() * 1000ULL);
+}
 
 void adjustTempo(int8_t direction, uint64_t nowUs, uint32_t nowMs) {
   const uint16_t previousTempo = state.tempoBpm();
@@ -30,9 +80,8 @@ void adjustTempo(int8_t direction, uint64_t nowUs, uint32_t nowMs) {
     return;
   }
 
-  const bool rescheduled = beatClock.reschedule(
-      nowUs, state.beatIntervalMs() * 1000ULL,
-      IntervalChangePolicy::PreservePhase);
+  const bool rescheduled = player.changeTiming(
+      nowUs, currentStepIntervals(), TriggerTimingChange::PreservePhase);
   if (!rescheduled) {
     Serial.println("clock: reschedule_failed");
     return;
@@ -98,40 +147,20 @@ void applyControl(ControlCommand command, uint64_t nowUs, uint32_t nowMs) {
   }
 }
 
-void triggerCurrentClick(uint32_t nowMs) {
-  const bool downbeat = state.currentBeat() == 0;
-  const ClickSoundId sound =
-      downbeat ? state.accentClick() : state.regularClick();
-  const PcmS8Sample& sample = clickSoundSample(sound);
-  const bool started = audio.play(sample);
-  const uint32_t durationMs =
-      sample.sampleCount * 1000UL / sample.sampleRateHz;
-  Serial.printf(
-      "click: beat=%u accent=%s sound=%s duration_ms=%lu sample_rate_hz=%lu "
-      "samples=%u volume=%u gain=master playback=started ok=%s now_ms=%lu\n",
-      state.currentBeat() + 1, downbeat ? "yes" : "no",
-      clickSoundLogName(sound), static_cast<unsigned long>(durationMs),
-      static_cast<unsigned long>(sample.sampleRateHz),
-      static_cast<unsigned>(sample.sampleCount), state.clickVolume(),
-      started ? "yes" : "no", static_cast<unsigned long>(nowMs));
-}
-
 void advanceVisibleBeat(uint64_t nowUs, uint32_t nowMs) {
-  const uint32_t elapsed = beatClock.poll(nowUs).elapsed_intervals;
-  if (elapsed == 0) return;
+  const TriggerPatternPlayerUpdate update = player.update(nowUs);
+  if (!update.advanced()) return;
 
-  const uint8_t previousBeat = state.currentBeat();
-  state.advanceBeat(elapsed);
-  // A late poll cannot replay clicks whose deadlines are already past. Wait
-  // for the next absolute deadline before producing audio again.
-  if (elapsed == 1) triggerCurrentClick(nowMs);
-  else Serial.printf("transport: skipped_intervals count=%lu\n",
-                     static_cast<unsigned long>(elapsed));
-  display.drawBeat(previousBeat, false);
-  display.drawBeat(state.currentBeat(), true);
+  if (update.elapsedSteps > 1) {
+    Serial.printf("player: skipped_steps count=%lu\n",
+                  static_cast<unsigned long>(update.elapsedSteps));
+  }
+  display.drawBeat(update.previousStep, false);
+  display.drawBeat(update.currentStep, true);
 
   Serial.printf("beat: index=%u elapsed=%lu now_ms=%lu\n",
-                state.currentBeat() + 1, static_cast<unsigned long>(elapsed),
+                update.currentStep + 1,
+                static_cast<unsigned long>(update.elapsedSteps),
                 static_cast<unsigned long>(nowMs));
 }
 }  // namespace
@@ -149,14 +178,14 @@ void setup() {
   M5.Display.setRotation(1);
   buildMetronomeClickSamples();
   const bool keepAliveStarted = audio.begin(state.clickVolume());
-  display.drawScreen(state);
-  const bool clockStarted = beatClock.begin(
-      static_cast<uint64_t>(esp_timer_get_time()),
-      state.beatIntervalMs() * 1000ULL);
-  if (!clockStarted) {
-    Serial.println("clock: begin_failed");
+  const bool patternLoaded = patternSource.load();
+  display.drawScreen(state, player.currentStep());
+  const bool playerStarted = player.begin(
+      static_cast<uint64_t>(esp_timer_get_time()), currentStepIntervals(),
+      TriggerStart::EmitImmediately);
+  if (!patternLoaded || !playerStarted) {
+    Serial.println("player: begin_failed");
   }
-  triggerCurrentClick(millis());
   Serial.printf(
       "metronome: audible_clock=ready bpm=%u volume=%u beats_per_bar=%u "
       "control_mode=%s\n",

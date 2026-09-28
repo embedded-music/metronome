@@ -6,7 +6,7 @@
 
 class MetronomeDisplay {
  public:
-  void drawScreen(const MetronomeState& state);
+  void drawScreen(const MetronomeState& state, uint8_t currentBeat);
   void drawControl(const MetronomeState& state);
   void drawBeat(uint8_t beat, bool active);
 
