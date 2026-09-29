@@ -120,7 +120,7 @@ void applyControl(ControlCommand command, uint64_t nowUs, uint32_t nowMs) {
   if (command == ControlCommand::None) return;
 
   if (command == ControlCommand::NextMode) {
-    Serial.println("button: action=chord names=a+b");
+    Serial.println("button: name=power action=clicked");
     state.cycleControlMode();
     display.drawControl(state);
     Serial.printf("control: action=mode selected=%s\n",

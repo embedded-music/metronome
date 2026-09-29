@@ -28,7 +28,8 @@ smaller `firmware.bin`, which contains only the application image.
 2. Confirm the display boots in landscape and the opening accented click plays.
 3. Let it run long enough to confirm a stable four-beat visual and audible cycle.
 4. Check the minimum and maximum tempo and volume boundaries.
-5. Cycle through Tempo, Volume, and Sound with A+B; audition both sound roles.
+5. Short-click Power to cycle through Tempo, Volume, and Sound; confirm the
+   on-screen instruction and audition both sound roles with A and B.
 6. Burn the same image through M5Burner's local/custom firmware flow.
 
 Command-line flashing equivalent:

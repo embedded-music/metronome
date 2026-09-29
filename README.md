@@ -12,14 +12,15 @@ and click behavior.
 
 ## Controls
 
-The two-button control surface starts in Tempo mode. Button A increases and
-Button B decreases the BPM. Press A+B together to cycle through:
+The control surface starts in Tempo mode. Button A increases and Button B
+decreases the BPM. Short-click the Power button to cycle through:
 
 - Tempo: A `+1 BPM`, B `-1 BPM`;
 - Volume: A raises and B lowers the click level;
 - Sound: A selects the accent sound and B selects the regular sound.
 
-The next A+B chord returns to Tempo mode. The firmware currently uses a fixed
+The next Power click returns to Tempo mode. The bottom of every screen shows
+the Power, A, and B assignments. The firmware currently uses a fixed
 four-beat meter and begins playing immediately after boot.
 
 ```sh
@@ -39,7 +40,7 @@ The firmware keeps application concerns in local modules while their contracts
 are still specific to this metronome:
 
 - `BeatClock`: monotonic deadlines and phase-preserving interval changes;
-- `ControlSurface`: A/B release gestures, chord priority, and input rearming;
+- `ControlSurface`: Power screen changes and A/B release gestures;
 - `MetronomeState`: bounded musical/control state and mode transitions;
 - `MetronomeDisplay`: all screen layout and incremental beat drawing;
 - `MetronomeAudio`: speaker ownership, master gain, silent keep-alive, and PCM
