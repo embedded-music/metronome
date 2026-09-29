@@ -19,10 +19,10 @@ decreases the BPM. Short-click the Power button to cycle through:
 - Volume: A raises and B lowers the click level;
 - Sound: A selects the accent sound and B selects the regular sound.
 
-The next Power click returns to Tempo mode. The bottom of every screen names
-the destination of the next Power click (`PWR Volume`, `PWR Sounds`, or
-`PWR BPM`) and shows the current A/B assignments. The firmware currently uses
-a fixed four-beat meter and begins playing immediately after boot.
+The next Power click returns to Tempo mode. The bottom of every screen shows
+the current A/B assignments first, followed by the destination of the next
+Power click (`PWR Volume`, `PWR Sounds`, or `PWR BPM`). The firmware currently
+uses a fixed four-beat meter and begins playing immediately after boot.
 
 ```sh
 just build
