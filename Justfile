@@ -7,6 +7,9 @@ default:
 build:
     {{pio}} run -e {{environment}}
 
+package-m5burner:
+    tools/package-m5burner.sh
+
 upload:
     {{pio}} run -e {{environment}} --target upload
 
@@ -21,4 +24,3 @@ devices:
 
 clean:
     {{pio}} run -e {{environment}} --target clean
-

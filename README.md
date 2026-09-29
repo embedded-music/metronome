@@ -1,31 +1,32 @@
 # Metronome
 
-Experimental home for musical-time and metronome interactions on embedded
-hardware. The first target is the M5StickC Plus2 with its two user buttons,
-135-by-240 display, and onboard passive buzzer.
+An audible, pocket-sized metronome for the M5StickC Plus2, using its two user
+buttons, 135-by-240 display, and onboard speaker. It provides adjustable tempo
+and volume, a four-beat visual pulse, an accented downbeat, and selectable
+click sounds.
 
-This repository begins as an application experiment, not a reusable clock or
-transport package. Its timing implementation will be compared with the local
-`StepClock` in
-[`calculator-face-input`](https://github.com/embedded-music/calculator-face-input)
-before either design is promoted into shared code.
+The firmware grew from a musical-time experiment into a small standalone
+instrument. Its reusable timing and pattern playback now live in published
+packages, while this repository owns the M5StickC Plus2 interaction, display,
+and click behavior.
 
-## Current experiment
+## Controls
 
-The hardware baseline proves the PlatformIO target, M5Unified initialization,
-landscape display, and Button A/B edges. A silent-clock slice then added a 120
-BPM deadline clock and four visible beat indicators. The current slice adds
-generated PCM clicks. The two-button control
-surface starts in Tempo mode: A increases and B decreases the BPM. Pressing
-A+B cycles to Volume mode, where the same buttons adjust output level; the next
-chord enters Sound mode, where A selects the accent and B selects regular
-clicks. The next chord returns to Tempo. Selectable meter and transport
-behavior remain deferred.
+The two-button control surface starts in Tempo mode. Button A increases and
+Button B decreases the BPM. Press A+B together to cycle through:
+
+- Tempo: A `+1 BPM`, B `-1 BPM`;
+- Volume: A raises and B lowers the click level;
+- Sound: A selects the accent sound and B selects the regular sound.
+
+The next A+B chord returns to Tempo mode. The firmware currently uses a fixed
+four-beat meter and begins playing immediately after boot.
 
 ```sh
 just build
 just upload
 just monitor
+just package-m5burner
 ```
 
 `just upload-monitor` flashes and then opens the serial monitor. Run
@@ -95,13 +96,12 @@ dispatch may need different catch-up policies: a sequencer must preserve its
 position, while a metronome should not emit a burst of clicks whose deadlines
 have already passed.
 
-## Planned slices
+`just package-m5burner` creates a versioned full-flash image and SHA-256
+checksum under `dist/m5burner/`. See the
+[M5Burner publishing guide](docs/publishing/m5burner.md).
 
-1. Validate the display and both buttons on hardware. **Complete.**
-2. Add a drift-resistant silent beat clock and visible beat position. **Complete.**
-3. Add regular and accented downbeat buzzer clicks. **Current.**
-4. Add tempo controls and define mid-interval tempo-change behavior.
-5. Add selectable meter and click grouping.
-6. Add Start, Stop, and Continue interaction.
-7. Compare the result with the Calculator sequencer before extracting shared
-   timing code.
+## Possible next slices
+
+- selectable meter and click grouping;
+- Start, Stop, and Continue interaction;
+- persisted tempo, volume, and sound choices.
