@@ -56,9 +56,10 @@ void MetronomeDisplay::drawInputStatus(ControlMode mode) {
   M5.Display.setTextSize(1);
   M5.Display.setCursor(8, STATUS_ROW_Y + 3);
   if (mode == ControlMode::Sound) {
-    M5.Display.print("PWR screen  A accent  B regular");
+    M5.Display.print("PWR BPM  A accent  B regular");
   } else {
-    M5.Display.print("PWR screen   A +   B -");
+    M5.Display.printf("PWR %s   A +   B -",
+                      mode == ControlMode::Tempo ? "Volume" : "Sounds");
   }
 }
 
