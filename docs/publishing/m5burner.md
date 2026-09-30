@@ -16,7 +16,22 @@ dist/m5burner/metronome-m5stickc-plus2-v0.1.0.bin
 ```
 
 A SHA-256 checksum is written alongside it. The generated artifacts are
-ignored by Git and should be attached to a matching tagged GitHub release.
+ignored by Git.
+
+## Publish a GitHub release
+
+After the hardware release gate passes, tag the validated revision with the
+version from `VERSION` and push the tag:
+
+```text
+jj tag set metronome-v0.1.0
+jj git push --tag metronome-v0.1.0
+```
+
+The `Release firmware` GitHub Actions workflow validates that the tag and
+`VERSION` agree, rebuilds the merged image, verifies its checksum, and creates
+a GitHub release containing both files. Application release tags use the
+project-qualified form `metronome-vX.Y.Z`.
 
 The merged image is flashed at address `0x0`; it contains the bootloader,
 partition table, Arduino boot metadata, and application. Do not submit the
@@ -56,9 +71,9 @@ the target device, and only then make the entry public.
 
 ## Updating a release
 
-Change `VERSION`, rebuild, repeat the hardware gate, and upload the new version
-through the existing entry's **Detail** action. Keep the source revision
-discoverable through a matching Git tag and GitHub release.
+Change `VERSION`, rebuild, repeat the hardware gate, push the matching
+`metronome-vX.Y.Z` tag, and upload the released binary through the existing
+entry's **Detail** action.
 
 Official references:
 
