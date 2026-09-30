@@ -1,8 +1,8 @@
 # Metronome
 
 An audible, pocket-sized metronome for the M5StickC Plus2, using its two user
-buttons, 135-by-240 display, and onboard speaker. It provides adjustable tempo
-and volume, a four-beat visual pulse, an accented downbeat, and selectable
+buttons, 135-by-240 display, and onboard passive buzzer. It provides adjustable
+tempo and volume, a four-beat visual pulse, an accented downbeat, and selectable
 click sounds.
 
 The firmware grew from a musical-time experiment into a small standalone
@@ -44,7 +44,7 @@ are still specific to this metronome:
 - `ControlSurface`: Power screen changes and A/B release gestures;
 - `MetronomeState`: bounded musical/control state and mode transitions;
 - `MetronomeDisplay`: all screen layout and incremental beat drawing;
-- `MetronomeAudio`: speaker ownership, master gain, silent keep-alive, and PCM
+- `MetronomeAudio`: buzzer ownership, master gain, silent keep-alive, and PCM
   dispatch;
 - `MetronomeClickSamples`: the fixed generated sound catalog;
 - `main.cpp`: setup, event ordering, orchestration, and diagnostic logs.

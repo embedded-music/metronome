@@ -48,7 +48,7 @@ esptool --chip esp32 write-flash 0x0 \
 | Device Type | M5StickC Plus2 |
 | GitHub | `https://github.com/embedded-music/metronome` |
 | Firmware | generated versioned `.bin` |
-| Description | `Pocket metronome for M5StickC Plus2 with visual beats, an accented downbeat, adjustable tempo and volume, and selectable click sounds.` |
+| Description | `Pocket metronome for M5StickC Plus2 with visual beats, an accented downbeat, adjustable tempo and volume, selectable click sounds, and onboard passive-buzzer output.` |
 
 Sign in to M5Burner, open **USER CUSTOM** and **Publish**, then upload the
 firmware and a cover image. Publish privately first, burn the uploaded copy on
